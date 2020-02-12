@@ -1,0 +1,261 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <style>
+            @font-face {
+                font-family: 'peppa'; /*a name to be used later*/
+                src: url('peppa.ttf'); /*URL to font*/
+            }
+            html, * {
+                font-family: 'peppa';
+            }
+            #chicken {
+                height: 120px;
+                width: auto;
+                position: absolute;
+                z-index: 2;
+            }
+            .egg {
+                position: absolute;
+                height: 80px;
+                width: auto;
+                z-index: 1;
+            }
+            body {
+                border: 0;
+                margin: 0;
+                padding: 0;
+                background-color: #01D6FF;                
+            }
+            div#points {
+                position: absolute;
+                right: 10px;
+                top: 10px;
+                min-width: 300px;
+                height: 100px;
+                /*background-color: #3A83C5;*/
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 60px;
+                background-image: url("point.png");
+                background-size: 100% 100%;
+                background-position: center center;
+                z-index: 3;
+            }
+            div#points>sapn {
+                z-index: 4;
+                height: 100px;
+                width: 100%;
+                position: absolute;
+                text-align: center;  
+                top: 0;
+                left: 0;
+            }
+            div#error {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color:crimson;
+                display: none;
+                z-index: 5;
+                font-size: 50vh;
+                color:lightcoral;
+                align-items: center;
+                justify-content: center;
+            }
+            div#done {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color:green;
+                display: none;
+                z-index: 6;
+                font-size: 50vh;
+                color:lawngreen;
+                align-items: center;
+                justify-content: center;
+            }
+        </style>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <div id="points"><span></span></div>
+        <div id="error">☹</div>
+        <div id="done">☺</div>
+        <img id="chicken" src="gallinella.png"/>
+        <script>
+            $(
+                function () {
+                    var chicken =  $("#chicken");
+                    var chickenPercentage = [(chicken.height()*100)/$(window).height(), (chicken.width()*100)/$(window).width()];
+                    var point = 0;
+
+                    function moveChicken(animate) {
+                        y = Math.random()*(100-chickenPercentage[0])+"vh";
+                        x = Math.random()*(100-chickenPercentage[1])+"vw";
+                        if (animate) {
+                            chicken.animate(
+                                {
+                                    "top": y,
+                                    "left": x
+                                }, 300
+                            )
+                           
+                        } else {
+                            chicken.css(
+                                {
+                                    "top": y,
+                                    "left": x
+                                }
+                            )
+                        }
+                        return {x:x, y:y};
+                    }
+                    function addEgg(x, y) {
+                        $("body").append("<img src='egg.png' id='e"+point+"'  class='egg'/>");
+                        console.log($("#"+point))
+                        $("#e"+point).css(
+                            {
+                                "top":y,
+                                "left":x,
+                            }
+                        ) 
+                    }
+                    
+                    var finished = true;
+                    var coord = moveChicken(0);
+                    function toStr(numb) {
+                        r = ""+numb;
+                        console.log(r, r.length);
+                        while(r.length<3) {
+                            r = '0'+r;
+                            console.log(r);
+                        }
+                        return r;
+                    }
+                    $("#points>span").html(toStr(point));
+
+                    function onEvent(e) {
+                            if (finished && e.keyCode == 32) {
+                                addEgg(coord.x, coord.y);
+                                coord = moveChicken(1);
+                                finished = false;
+                                setTimeout(
+                                    function(){
+                                        finished = true;
+                                        point++;
+                                        $("#points>span").html(toStr(point));
+                                    }, 
+                                    300
+                                );
+                                
+                            }
+                    }
+                    $(window).bind(
+                        "keydown", onEvent                     
+                    ); 
+                    $(window).bind(
+                        "touch",onEvent                    
+                    );
+
+                    start = new Date();
+                    function count() {
+                        diff= new Date() - start;
+                        if(diff >= 26790) {
+                            $(window).unbind(
+                                "keydown", onEvent                        
+                            ); 
+                            $(window).unbind(
+                                "touch",onEvent                        
+                            );
+                           
+                            $(".egg").attr("src", "gallinella.png");
+                            
+                            setTimeout(
+                                function() {
+                                    if(point < 25) {
+                                        displayPoint();
+                                        return 1;
+                                    }
+                                    $("div#error").css(
+                                        {
+                                            "display":"flex"
+                                        }
+                                    );
+                                    var audio = new Audio('rotto1.mp3');
+                                    audio.play();
+                                    $(audio).on(
+                                        "ended",
+                                        function(){
+                                            finished=true;
+                                            $(window).bind(
+                                                "keydown", function () {
+                                                    if (finished) {
+                                                        finished = false;
+                                                        $("div#done").css(
+                                                            {
+                                                                "display":"flex"
+                                                            }
+                                                        );
+
+                                                        var audio2 = new Audio('aggiustato.mp3');
+                                                        audio2.play();
+                                                        
+                                                        $(audio2).on(
+                                                            "ended",
+                                                            function () {
+                                                                location.reload();
+                                                                finished = true;
+                                                            }
+                                                        )
+                                                        
+                                                    }
+                                                }                     
+                                            );
+                                           
+                                        }
+                                    )
+                                }, 
+                            1300);
+                            function displayPoint() {
+                                $("#points").css(
+                                    {
+                                        "height":"70%",
+                                        "width":"70%",
+                                        "left":"15%",
+                                        "top":"15%"
+                                    }
+                                )
+                                $("#points").css(
+                                    {
+                                        "font-size":"37vh"
+                                    }
+                                )
+                                $(window).bind(
+                                    "keydown", 
+                                    function () {
+                                        location.reload();
+                                        finished = true;
+                                    }                     
+                                );
+                            }
+                        } else {
+                            window.requestAnimationFrame(count);
+                        }
+                        
+                    }
+                    count();
+                   
+                    
+                }
+            )
+        </script>
+    </body>
+</html>   
